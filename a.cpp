@@ -43,7 +43,7 @@ int main() {
     int n, i, prob;
     string linha, expr;
     vector <Node *> appNodes, leafs;
-    Node *arvore;
+    Node arvore("", false);
 
     saida.open("Saida.out");
     entrada.open("Entrada.in");
@@ -58,12 +58,12 @@ int main() {
         if(prob == 0 || prob == 3) {
             expr = getExpr(linha);
             Node node(expr, true);
-            arvore = &node;
+            arvore = node;
         }
         else if(prob == 1 || prob == 2) {
             expr = getExpr(linha);
             Node node(expr, false);
-            arvore = &node;
+            arvore = node;
         }
         else if(prob == 4) {
             int j;
@@ -71,7 +71,7 @@ int main() {
             string lnova;
             expr = getExpr(linha);
             Node node(expr, false);
-            arvore = &node;
+            arvore = node;
             for(j=0; stop; j++) {
                 if(linha[j] == '{') {
                     stop=false;
@@ -83,17 +83,21 @@ int main() {
             }
             while(lnova.length() > 0) {
                 expr = getExpr(lnova);
-                arvore->insertFront(expr, true);
+                arvore.insertFront(expr, true);
                 lnova = getExpr2(lnova);
             }
             
         }
-        while(!arvore->isClosed() && !arvore->getAppliableNodes().empty()) {
-            appNodes = sortNodes(arvore->getAppliableNodes());
+        while(!arvore.isClosed() && !arvore.getAppliableNodes().empty()) {
+
+            appNodes = sortNodes(arvore.getAppliableNodes());
+
             for(int k=0; k<appNodes.size(); k++) {
+
                 expr = appNodes[k]->getExpression();
                 bool v = appNodes[k]->getTruthValue();
                 char op = getOperator(expr);
+
                 if(op == '~') {
                     string neg = getNegacao(expr);
                     leafs = appNodes[k]->insertFront(neg, !v);
@@ -129,28 +133,27 @@ int main() {
                 appNodes[k]->markApplied();
             }
         }
-        arvore->printTree();
 
         saida << "Problema #" << n-i+1 << endl;
 
         if(prob==0) {
-            if(arvore->isClosed()) saida << "Nao, nao e satisfativel." << endl;
+            if(arvore.isClosed()) saida << "Nao, nao e satisfativel." << endl;
             else saida << "Sim, e satisfativel." << endl;
         }
         else if(prob==1) {
-            if(arvore->isClosed()) saida << "Nao, nao e refutavel." << endl;
+            if(arvore.isClosed()) saida << "Nao, nao e refutavel." << endl;
             else saida << "Sim, e refutavel." << endl;
         }
         else if(prob==2) {
-            if(arvore->isClosed()) saida << "Sim, e tautologia." << endl;
+            if(arvore.isClosed()) saida << "Sim, e tautologia." << endl;
             else saida << "Nao, nao e tautologia." << endl;
         }
         else if(prob==3) {
-            if(arvore->isClosed()) saida << "Sim, e insatisfativel." << endl;
+            if(arvore.isClosed()) saida << "Sim, e insatisfativel." << endl;
             else saida << "Nao, nao e insatisfativel." << endl;
         }
         else {
-            if(arvore->isClosed()) saida << "Sim, e consequencia logica." << endl;
+            if(arvore.isClosed()) saida << "Sim, e consequencia logica." << endl;
             else saida << "Nao, nao e consequencia logica." << endl;
         }
         i--;
