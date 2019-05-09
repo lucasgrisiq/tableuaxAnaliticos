@@ -38,8 +38,11 @@ void getSubExpr(string expr, string *sub1, string *sub2);
 string getExpr2(string linha);
 
 int main() {
+    // arquivos
     ifstream entrada;
     ofstream saida;
+
+    // variaveis
     int n, i, prob, j, k, a;
     string linha, expr, ep;
     string sub1, sub2, neg;
@@ -51,12 +54,15 @@ int main() {
 
     saida.open("./inout/Saida.out");
     entrada.open("./inout/Entrada.in");
+
     entrada >> n;
-    getline(entrada, linha);
     i = n;
 
+    // ignora '\n'
+    getline(entrada, linha);
+
     while(i > 0) {
-    
+        // salva linha n-i+1 em linha
         getline(entrada, linha);
         prob = getProblem(linha);
         if(prob == 0 || prob == 3) {
@@ -76,11 +82,14 @@ int main() {
             ep = expr;
             Node node(expr, false);
             arvore = node;
+
+            // procura pelo conjunto de expressoes
             for(j=0; stop && j<linha.length(); j++) {
                 if(linha[j] == '{') {
                     stop=false;
                 }
             }
+            // salva em nova string o conjunto de expressoes
             while(linha[j] != '}' && j<linha.length()) {
                 lnova += linha[j];
                 j++;
@@ -98,11 +107,11 @@ int main() {
         }
 
 
-    
         while(!arvore.isClosed() && !arvore.getAppliableNodes().empty()) {
             appNodes.clear();
             leafs.clear();
-
+            
+            // ordena nos aplicaveis pondo os que bifurcam por ultimo
             appNodes = sortNodes(arvore.getAppliableNodes());
 
             for(k=0; k<appNodes.size(); k++) {
@@ -187,6 +196,8 @@ int main() {
 string getNegacao(string expr) {
     string sub;
     int i=2, pe=0, pd=0;
+
+    // pula caractere '~' e comeca pela pos 2 da string
     if(expr[i]=='(' && i < expr.length()) {
         pe++;
         sub += expr[i];
@@ -198,6 +209,7 @@ string getNegacao(string expr) {
             i++;
         }
     }
+    // caso em que expr eh atomica
     else {
         while(i < expr.length() && expr[i]!=')') {
             sub += expr[i];
@@ -212,11 +224,13 @@ string getExpr(string linha) {
     bool stop=true;
     string expr;
 
+    // verifica se eh expressao atomica
     if(linha[0] > 40 && linha[0] < 91) {
         expr = linha[0];
         return expr;
     }
     else {
+        // salva em nova string ate que os parenteses a esquerda se igualem aos da direita
         for(i=0; stop && i<linha.length(); i++) {
             if(linha[i] == '(') {
                 expr = linha[i];
@@ -240,11 +254,12 @@ string getExpr(string linha) {
     return expr;
 }
 
+// funcao apaga expressoes antes da virgula e retorna string apos a virgula
 string getExpr2(string linha) {
     int i=0;
     bool stop=true;
     string expr;
-
+    
     while(stop && i<linha.length()) {
         if(linha[i]==',') stop = false;
         i++;
@@ -280,6 +295,7 @@ char getOperator(string expr) {
     bool stop = true;
     int i=1, pe=0, pd=0;
     char ret;
+    // caso seja ~ , nao tera o parenteses a esquerda no inicio
     if(expr[i] != '~') {
         while(stop && i<expr.length()) {
             if(expr[i] == '(') pe++;
@@ -302,6 +318,8 @@ vector <Node *> sortNodes(vector <Node *> nodes) {
     for(i=0; i<nodes.size(); i++) {
         op = getOperator(nodes[i]->getExpression());
         value = nodes[i]->getTruthValue();
+
+        // regras que nao bifurcam
         if((op=='v' && value==true) || (op=='&' && value==false) || (op=='>' && value==false) || (op=='~')){
             nos.insert(nos.begin(), nodes[i]);
         }
