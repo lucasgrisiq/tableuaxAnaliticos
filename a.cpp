@@ -34,27 +34,31 @@ int getProblem(string linha);
 char getOperator(string expr);
 vector <Node *> sortNodes(vector <Node *> nodes);
 string getNegacao(string expr);
-string* getSubExpr(string expr);
+void getSubExpr(string expr, string *sub1, string *sub2);
 string getExpr2(string linha);
 
 int main() {
     ifstream entrada;
     ofstream saida;
-    int n, i, prob;
-    string linha, expr;
-    vector <Node *> appNodes, leafs;
+    int n, i, prob, j, k, a;
+    string linha, expr, ep;
+    string sub1, sub2, neg;
     Node arvore("", false);
+    vector <Node *> appNodes, leafs;
+    bool v, stop;
+    char op;
 
-    saida.open("Saida.out");
-    entrada.open("Entrada.in");
+
+    saida.open("./inout/Saida.out");
+    entrada.open("./inout/Entrada.in");
     entrada >> n;
     getline(entrada, linha);
     i = n;
 
     while(i > 0) {
+    
         getline(entrada, linha);
         prob = getProblem(linha);
-
         if(prob == 0 || prob == 3) {
             expr = getExpr(linha);
             Node node(expr, true);
@@ -66,66 +70,76 @@ int main() {
             arvore = node;
         }
         else if(prob == 4) {
-            int j;
-            bool stop=true;
+            stop=true;
             string lnova;
             expr = getExpr(linha);
+            ep = expr;
             Node node(expr, false);
             arvore = node;
-            for(j=0; stop; j++) {
+            for(j=0; stop && j<linha.length(); j++) {
                 if(linha[j] == '{') {
                     stop=false;
                 }
             }
-            while(linha[j] != '}') {
+            while(linha[j] != '}' && j<linha.length()) {
                 lnova += linha[j];
                 j++;
             }
-            while(lnova.length() > 0) {
+            vector <Node *> insert;
+            while(lnova.length() > 0 && !arvore.isClosed()) {
                 expr = getExpr(lnova);
-                arvore.insertFront(expr, true);
+                insert = arvore.insertFront(expr, true);
                 lnova = getExpr2(lnova);
+                if(insert[0]->checkContradiction()) {
+                    insert[0]->markContradiction();
+                }
+                insert.clear();
             }
-            
         }
+
+
+    
         while(!arvore.isClosed() && !arvore.getAppliableNodes().empty()) {
+            appNodes.clear();
+            leafs.clear();
 
             appNodes = sortNodes(arvore.getAppliableNodes());
 
-            for(int k=0; k<appNodes.size(); k++) {
+            for(k=0; k<appNodes.size(); k++) {
 
                 expr = appNodes[k]->getExpression();
-                bool v = appNodes[k]->getTruthValue();
-                char op = getOperator(expr);
+                v = appNodes[k]->getTruthValue();
+                op = getOperator(expr);
 
                 if(op == '~') {
-                    string neg = getNegacao(expr);
+                    neg="";
+                    neg = getNegacao(expr);
                     leafs = appNodes[k]->insertFront(neg, !v);
                 }
                 else if(op == '&') {
-                    string *subs;
-                    subs = new string[2];
-                    subs = getSubExpr(expr);
+                    sub1="";
+                    sub2="";
+                    getSubExpr(expr, &sub1, &sub2);
 
-                    if(v) leafs = appNodes[k]->insertFront(subs[0], v, subs[1], v);
-                    else leafs = appNodes[k]->insertSides(subs[0], v, subs[1], v);
+                    if(v) leafs = appNodes[k]->insertFront(sub1, v, sub2, v);
+                    else leafs = appNodes[k]->insertSides(sub1, v, sub2, v);
                 }
                 else if(op == 'v') {
-                    string *subs;
-                    subs = new string[2];
-                    subs = getSubExpr(expr);
+                    sub1="";
+                    sub2="";
+                    getSubExpr(expr, &sub1, &sub2);
                     
-                    if(!v) leafs = appNodes[k]->insertFront(subs[0], v, subs[1], v);
-                    else leafs = appNodes[k]->insertSides(subs[0], v, subs[1], v);
+                    if(!v) leafs = appNodes[k]->insertFront(sub1, v, sub2, v);
+                    else leafs = appNodes[k]->insertSides(sub1, v, sub2, v);
                 }
                 else if(op == '>') {
-                    string *subs;
-                    subs = new string[2];
-                    subs = getSubExpr(expr);
-                    if(!v) leafs = appNodes[k]->insertFront(subs[0], !v, subs[1], v);
-                    else leafs = appNodes[k]->insertSides(subs[0], !v, subs[1], v);
+                    sub1="";
+                    sub2="";
+                    getSubExpr(expr, &sub1, &sub2);
+                    if(!v) leafs = appNodes[k]->insertFront(sub1, !v, sub2, v);
+                    else leafs = appNodes[k]->insertSides(sub1, !v, sub2, v);
                 }
-                for(int a=0; a<leafs.size(); a++) {
+                for(a=0; a<leafs.size(); a++) {
                     if(leafs[a]->checkContradiction()){
                         leafs[a]->markContradiction();
                     }    
@@ -133,7 +147,10 @@ int main() {
                 appNodes[k]->markApplied();
             }
         }
-
+        
+        appNodes.clear();
+        leafs.clear();
+        
         saida << "Problema #" << n-i+1 << endl;
 
         if(prob==0) {
@@ -156,15 +173,21 @@ int main() {
             if(arvore.isClosed()) saida << "Sim, e consequencia logica." << endl;
             else saida << "Nao, nao e consequencia logica." << endl;
         }
+
         i--;
-        saida << endl;
+        if(i > 0) saida << endl;
     }
+
+    saida.close();
+    entrada.close();
+
+    return 0;
 }
 
 string getNegacao(string expr) {
     string sub;
     int i=2, pe=0, pd=0;
-    if(expr[i]=='(') {
+    if(expr[i]=='(' && i < expr.length()) {
         pe++;
         sub += expr[i];
         i++;
@@ -194,14 +217,14 @@ string getExpr(string linha) {
         return expr;
     }
     else {
-        for(i=0; stop; i++) {
+        for(i=0; stop && i<linha.length(); i++) {
             if(linha[i] == '(') {
                 expr = linha[i];
                 pe++;
                 stop=false;
             }
         }
-        while(pe > pd) {
+        while(pe > pd && i<linha.length()) {
             if(linha[i] == '(') {
                 expr += linha[i];
                 pe++;
@@ -214,8 +237,7 @@ string getExpr(string linha) {
             i++;
         }
     }
-    if(!stop) return expr;
-    else return "";
+    return expr;
 }
 
 string getExpr2(string linha) {
@@ -223,7 +245,7 @@ string getExpr2(string linha) {
     bool stop=true;
     string expr;
 
-    while(stop) {
+    while(stop && i<linha.length()) {
         if(linha[i]==',') stop = false;
         i++;
     }
@@ -259,7 +281,7 @@ char getOperator(string expr) {
     int i=1, pe=0, pd=0;
     char ret;
     if(expr[i] != '~') {
-        while(stop) {
+        while(stop && i<expr.length()) {
             if(expr[i] == '(') pe++;
             else if(expr[i] == ')') pd++;
             if(pd == pe) stop=false;
@@ -274,9 +296,10 @@ char getOperator(string expr) {
 
 vector <Node *> sortNodes(vector <Node *> nodes) {
     vector <Node *> nos;
+    int i;
     char op;
     bool value;
-    for(int i=0; i<nodes.size(); i++) {
+    for(i=0; i<nodes.size(); i++) {
         op = getOperator(nodes[i]->getExpression());
         value = nodes[i]->getTruthValue();
         if((op=='v' && value==true) || (op=='&' && value==false) || (op=='>' && value==false) || (op=='~')){
@@ -287,36 +310,33 @@ vector <Node *> sortNodes(vector <Node *> nodes) {
     return nos;
 }
 
-string* getSubExpr(string expr) {
+void getSubExpr(string expr, string *sub1, string *sub2) {
     int i=1, pe=0, pd=0;
-    string *sub;
-    sub = new string[2];
 
-    if(expr[i] != '(') {
-        while((i<expr.size()) && (expr[i]!='&' && expr[i]!='v' && expr[i]!='>')) {
-            sub[0] += expr[i];
-            i++;
-        }
-        i+=2;
+    // eh atomico
+    if(expr[i] > 40 && expr[i] < 91) {
+        *sub1 = expr[i];
+        i+=4;
     }
+
+    // expr do tipo (A & B)
     else {
         pe++;
-        sub[0] += expr[i];
+        *sub1 += expr[i];
         i++;
-        while(pe!=pd) {
+        while(pe!=pd && i<expr.length()) {
             if(expr[i]=='(') pe++;
             else if(expr[i]==')') pd++;
-            sub[0] += expr[i];
+            *sub1 += expr[i];
             i++;
         }
         i+=3;
     }
-    if(sub[0][0]>40 && sub[0][0]<91) sub[0]=sub[0][0];
+
+    // pula 3 posicoes e copia o resto da expr para sub2 - o parenteses final
     while(i < expr.size()-1) {
-        sub[1] += expr[i];
+        *sub2 += expr[i];
         i++;
     }
-    if(sub[1][0]>40 && sub[1][0]<91) sub[1]=sub[1][0];
 
-    return sub;
 }
