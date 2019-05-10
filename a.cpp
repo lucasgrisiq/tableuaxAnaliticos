@@ -99,9 +99,12 @@ int main() {
                 expr = getExpr(lnova);
                 insert = arvore.insertFront(expr, true);
                 lnova = getExpr2(lnova);
+
+                // checa por contradicao
                 if(insert[0]->checkContradiction()) {
                     insert[0]->markContradiction();
                 }
+
                 insert.clear();
             }
         }
@@ -111,7 +114,7 @@ int main() {
             appNodes.clear();
             leafs.clear();
             
-            // ordena nos aplicaveis pondo os que bifurcam por ultimo
+            // ordena nos aplicaveis; bifurcam por ultimo
             appNodes = sortNodes(arvore.getAppliableNodes());
 
             for(k=0; k<appNodes.size(); k++) {
@@ -130,7 +133,10 @@ int main() {
                     sub2="";
                     getSubExpr(expr, &sub1, &sub2);
 
+                    // A & B == true
                     if(v) leafs = appNodes[k]->insertFront(sub1, v, sub2, v);
+
+                    // A & B == false
                     else leafs = appNodes[k]->insertSides(sub1, v, sub2, v);
                 }
                 else if(op == 'v') {
@@ -138,14 +144,21 @@ int main() {
                     sub2="";
                     getSubExpr(expr, &sub1, &sub2);
                     
+                    // A v B == false
                     if(!v) leafs = appNodes[k]->insertFront(sub1, v, sub2, v);
+
+                    // A v B == true
                     else leafs = appNodes[k]->insertSides(sub1, v, sub2, v);
                 }
                 else if(op == '>') {
                     sub1="";
                     sub2="";
                     getSubExpr(expr, &sub1, &sub2);
+
+                    // A > B == false
                     if(!v) leafs = appNodes[k]->insertFront(sub1, !v, sub2, v);
+
+                    // A > B == true
                     else leafs = appNodes[k]->insertSides(sub1, !v, sub2, v);
                 }
                 for(a=0; a<leafs.size(); a++) {
@@ -224,7 +237,7 @@ string getExpr(string linha) {
     bool stop=true;
     string expr;
 
-    // verifica se eh expressao atomica
+    // verifica se e expressao atomica
     if(linha[0] > 40 && linha[0] < 91) {
         expr = linha[0];
         return expr;
