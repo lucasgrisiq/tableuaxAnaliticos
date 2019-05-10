@@ -320,7 +320,7 @@ vector <Node *> sortNodes(vector <Node *> nodes) {
         value = nodes[i]->getTruthValue();
 
         // regras que nao bifurcam
-        if((op=='v' && value==true) || (op=='&' && value==false) || (op=='>' && value==false) || (op=='~')){
+        if((op=='&' && value==true) || (op=='v' && value==false) || (op=='>' && value==false) || (op=='~')){
             nos.insert(nos.begin(), nodes[i]);
         }
         else nos.push_back(nodes[i]);
