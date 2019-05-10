@@ -331,13 +331,13 @@ vector <Node *> sortNodes(vector <Node *> nodes) {
 void getSubExpr(string expr, string *sub1, string *sub2) {
     int i=1, pe=0, pd=0;
 
-    // eh atomico
+    // e atomico
     if(expr[i] > 40 && expr[i] < 91) {
         *sub1 = expr[i];
         i+=4;
     }
 
-    // expr do tipo (A & B)
+    // op binaria (A [] B)
     else {
         pe++;
         *sub1 += expr[i];
